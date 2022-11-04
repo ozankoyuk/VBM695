@@ -31,8 +31,8 @@ def download_real_consumption():
         print(f'between: {start_date} / {now}')
         response_data = requests.get(f"{baseURL}{consumptionURL}?startDate={start_date.strftime('%Y-%m-%dT%H:%M:%S')}&endDate={now.strftime('%Y-%m-%dT%H:%M:%S')}")
         json_object = json.dumps(response_data.json()['body'], indent=2)
-        
-        with open(f"./real_consumption/{start_date.year}_{start_date.month}.json", "w") as outfile:
+        _month = start_date.month if start_date.month >= 10 else f"0{start_date.month}"
+        with open(f"./real_consumption/{start_date.year}_{_month}.json", "w") as outfile:
             outfile.write(json_object)
         start_date = start_date + relativedelta(months=+1)
 
@@ -43,8 +43,8 @@ def download_predictions():
         print(f'between: {start_date} / {now}')
         response_data = requests.get(f"{baseURL}{predictionURL}?startDate={start_date.strftime('%Y-%m-%dT%H:%M:%S')}&endDate={now.strftime('%Y-%m-%dT%H:%M:%S')}")
         json_object = json.dumps(response_data.json()['body'], indent=2)
-        
-        with open(f"./next_day_pred/{start_date.year}_{start_date.month}.json", "w") as outfile:
+        _month = start_date.month if start_date.month >= 10 else f"0{start_date.month}"
+        with open(f"./next_day_pred/{start_date.year}_{_month}.json", "w") as outfile:
             outfile.write(json_object)
         start_date = start_date + relativedelta(months=+1)
 
@@ -58,3 +58,5 @@ def crawl_data():
     check_folders()
     download_predictions()
     download_real_consumption()
+
+crawl_data()
