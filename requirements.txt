@@ -1,0 +1,9 @@
+python-dateutil
+scipy
+numpy
+matplotlib
+pandas
+tabulate
+sklearn
+keras
+tensorflow

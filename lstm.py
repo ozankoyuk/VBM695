@@ -22,29 +22,37 @@ from time import time
 import os
 
 
-def prepare_tabulate(real_cons, pred_cons, total_data, total_time, r2):
+def prepare_tabulate(real_cons, real_pred_list, new_pred_cons, total_time, r2_real, r2_lstm, headers):
     tabulate_txt = []
-    all_errors = []
+    real_errors = []
+    lstm_errors = []
     real_cons = real_cons.to_list()
+    real_pred_list = real_pred_list.to_list()
     for i in range(24):
-        yhat = pred_cons[i][0]
-        expected = real_cons[i]
+        new_pred = round(new_pred_cons[i][0], 2)
+        real_pred = round(real_pred_list[i], 2)
+        expected = round(real_cons[i], 2)
 
         # Calculate real and expected error
-        error = round((abs(yhat - expected) / expected) * 100.0, 2)   
-        tabulate_txt.append([yhat, expected, error])
-        all_errors.append(error)
+        error_lstm = round((abs(new_pred - expected) / expected) * 100.0, 2)   
+        error_real = round((abs(real_pred - expected) / expected) * 100.0, 2)   
+        tabulate_txt.append([expected, new_pred, real_pred, error_lstm, error_real])
+        lstm_errors.append(error_lstm)
+        real_errors.append(error_real)
     
     # Prepare data for tabulate and txt file
-    tabulate_txt.append(["-"*12, "-"*12, "-"*12])
-    tabulate_txt.append(['Model',f"LSTM", ""])
-    tabulate_txt.append(['Data Size', f"{total_data}", ""])
-    tabulate_txt.append(['Average Error', round(mean(all_errors), 3), ""])
+    tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
+    tabulate_txt.append(['Average Errors','','', round(mean(lstm_errors), 3), round(mean(real_errors),3)])
+    tabulate_txt.append(['R^2','','', "%.3f" % r2_lstm, "%.3f" % r2_real])
+    tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
     tabulate_txt.append(['Time in sec.', f"{total_time}", ""])
-    tabulate_txt.append(['R^2', "%.3f" % r2, ""])
+    tabulate_txt.append(['Start Date', first_date, '', '', ''])
+    tabulate_txt.append(['End Date', end_date, '', '', ''])
+    tabulate_txt.append(['Predicting', predicted_date, '', '', ''])
+    tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
 
     print(
-        tabulate(tabulate_txt, headers=['Predicted(MWh)', 'Expected(MWh)', 'Error (%)'])
+        tabulate(tabulate_txt, headers=headers)
         )
     return tabulate_txt
 
@@ -116,20 +124,22 @@ CHECK_FOLDER = os.path.isdir(MYDIR)
 if not CHECK_FOLDER:
     os.makedirs(MYDIR)
 
-# location,datetime,temp,dew_point,humidity,wind,wind_speed,wind_gust,pressure,condition
-# 1 hour of data contains 2 30mins data.
-# Import Google Trends Data
+# use data prepared by crawler and converter codes.
 dataset = pd.read_csv("./all_data.csv",  names=['date', 'consumption', 'lep'], header=None, skiprows=1)
 dataset.head()
-dataset['consumption'] = dataset['consumption'].astype('float64').fillna(0.0)
-dataset['lep'] = dataset['lep'].astype('float64')
-print('SA')
-print(dataset.info())
-#dataset['date'] = pd.to_datetime(dataset['date'])
 
-last_24_data = dataset.iloc[-24:] # remove last 24 hours to predict them
+# convert string data to float
+dataset['consumption'] = dataset['consumption'].astype('float64')
+dataset['lep'] = dataset['lep'].astype('float64')
+print(dataset.info())
+
+# dataset['date'] = pd.to_datetime(dataset['date'])
+
+first_date = dt.strptime(dataset.iloc[0]['date'], '%Y-%m-%d %H:%M:%S+03:00').strftime('%d.%m.%Y')
+end_date = dt.strptime(dataset.iloc[-25]['date'], '%Y-%m-%d %H:%M:%S+03:00').strftime('%d.%m.%Y')
 next_24_hours = [
-    pd.to_datetime(last_24_data['date'].iloc[0]) + timedelta(hours=x) for x in range(0,24,1)
+    dt.strptime(x, '%Y-%m-%d %H:%M:%S+03:00') 
+    for x in dataset.iloc[-24:]['date'].to_list()
 ]
 
 # Remove last 24 hours to predict them.
@@ -159,10 +169,10 @@ train_days = int(len(dataset)*0.8)
 testing_days = len(dataset) - train_days
 
 # Epoch -> one iteration over the entire dataset
-N_EPOCHS = 8
+N_EPOCHS = 2
 
 # Batch_size -> divide dataset and pass into neural network.
-BATCH_SIZE = 32
+BATCH_SIZE = 24
 
 # Parse and divide data into size of 24 hour of data.
 TIMESTAMP = 24
@@ -188,10 +198,11 @@ X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
 # activations: 'relu' / 'sigmoid' / 'tanh' / 'hardtanh' / 'leekly'
 # return_sequences: True -> to pass results to the next iteration of LSTM
 # input_shape: (X_train.shape[1], 1) -> shape is TIMESTAMP value
+# total hidden layer count = 24
 model = Sequential()
 model.add(
     LSTM(
-        120,
+        24,
         activation='relu',
         return_sequences=True,
         input_shape=(X_train.shape[1], 1)
@@ -199,11 +210,11 @@ model.add(
     )
 # Dropout: blocks random data for the given probability to next iteration.
 model.add(Dropout(0.2))
-model.add(LSTM(120, return_sequences=True))
+model.add(LSTM(24, return_sequences=True))
 model.add(Dropout(0.2))
 
 # Final iteration needs no return_sequences because its the final step.
-model.add(LSTM(120))
+model.add(LSTM(24))
 
 # When return_sequences is set to False,
 # Dense is applied to the last time step only.
@@ -247,34 +258,35 @@ main_plot = plotter(
     ylabel='Consumption (MWh)',
     title=f"Comparison of Predicted-Real Time Electricity Consumption for the date :{predicted_date} with LSTM"
 )
+
 # Save graph into folder
 main_plot.figure.savefig(f"./LSTM/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.png")
 
-r2 = r2_score(dataset['consumption'].iloc[-24:], y_predicted_descaled[-24:])
+r2_real = r2_score(dataset['consumption'].iloc[-24:], dataset['lep'].iloc[-24:])
+r2_lstm = r2_score(dataset['consumption'].iloc[-24:], y_predicted_descaled[-24:])
 
+headers=['Expected(MWh)', 'Predicted LSTM(MWh)', 'Predicted EPİAŞ(MWh)', 'Error LSTM(%)', 'Error EPİAŞ(%)']
 tabulate_txt = prepare_tabulate(
     real_cons=dataset['consumption'].iloc[-24:],
-    pred_cons=y_predicted_descaled[-24:],
-    total_data=len(dataset),
+    real_pred_list=dataset['lep'].iloc[-24:],
+    new_pred_cons=y_predicted_descaled[-24:],
     total_time=round(stop-start, 3),
-    r2=r2
+    r2_real=r2_real,
+    r2_lstm=r2_lstm,
+    headers=headers
     )
 
 with open(f"./LSTM/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.txt", 'w') as f:
-    print(tabulate(tabulate_txt, headers=['Predicted(MWh)', 'Expected(MWh)', 'Error (%)']), file=f)
+    print(tabulate(tabulate_txt, headers=headers), file=f)
     
 
-#                                                           
-#   ___                   _  __                 _    
-#  / _ \ ______ _ _ __   | |/ /___  _   _ _   _| | __
-# | | | |_  / _` | '_ \  | ' // _ \| | | | | | | |/ /
-# | |_| |/ / (_| | | | | | . \ (_) | |_| | |_| |   < 
-#  \___//___\__,_|_| |_| |_|\_\___/ \__, |\__,_|_|\_\
-#                                   |___/            
-#  _   _   ____     ___    ____    _____    ___    _____   _____   _____ 
-# | \ | | |___ \   / _ \  |___ \  |___ /   / _ \  |___ /  |___ /  |___  |
-# |  \| |   __) | | | | |   __) |   |_ \  | | | |   |_ \    |_ \     / / 
-# | |\  |  / __/  | |_| |  / __/   ___) | | |_| |  ___) |  ___) |   / /  
-# |_| \_| |_____|  \___/  |_____| |____/   \___/  |____/  |____/   /_/                                           
-#
-#
+#   ___ _____   _    _   _   _  _______   ___   _ _  __
+#  / _ \__  /  / \  | \ | | | |/ / _ \ \ / / | | | |/ /
+# | | | |/ /  / _ \ |  \| | | ' / | | \ V /| | | | ' / 
+# | |_| / /_ / ___ \| |\  | | . \ |_| || | | |_| | . \ 
+#  \___/____/_/   \_\_| \_| |_|\_\___/ |_|  \___/|_|\_\
+#  _   _ ____   ___ ____  _____  ___ _______________ 
+# | \ | |___ \ / _ \___ \|___ / / _ \___ /___ /___  |
+# |  \| | __) | | | |__) | |_ \| | | ||_ \ |_ \  / / 
+# | |\  |/ __/| |_| / __/ ___) | |_| |__) |__) |/ /  
+# |_| \_|_____|\___/_____|____/ \___/____/____//_/   
