@@ -13,4 +13,5 @@
 * [Autoregressive Integrated Moving Average (ARIMA)](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average)
 
 ---
-### 
+### Yol Haritası
+* Projemin yol haritasına [ilgili bağlantıdan](https://github.com/ozankoyuk/VBM695/blob/main/Ozan%20K%C3%B6y%C3%BCk%20Yol%20Haritas%C4%B1.pdf) erişebilirsiniz.
