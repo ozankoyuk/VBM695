@@ -184,7 +184,7 @@ train_days = int(len(dataset)*0.8)
 testing_days = len(dataset) - train_days
 
 # Epoch -> one iteration over the entire dataset
-N_EPOCHS = 16
+N_EPOCHS = 24
 
 # Batch_size -> divide dataset and pass into neural network.
 BATCH_SIZE = 24
