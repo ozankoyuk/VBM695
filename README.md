@@ -10,7 +10,8 @@
 * [Python](https://www.python.org/doc/)
 * [Long-Short Term Memory (LSTM)](https://colah.github.io/posts/2015-08-Understanding-LSTMs/)
 * [Multilayer Perceptrons (MLP)](https://towardsdatascience.com/multilayer-perceptron-explained-with-a-real-life-example-and-python-code-sentiment-analysis-cb408ee93141)
-* [Autoregressive Integrated Moving Average (ARIMA)](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average)
+* [Autoregressive Integrated Moving Average (ARIMA)](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average),
+* [Prophet](https://facebook.github.io/prophet/)
 
 ---
 ### Yol Haritası
