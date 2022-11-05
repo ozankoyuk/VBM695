@@ -119,21 +119,24 @@ def data_split(sequence, TIMESTAMP):
 _timestamp = int(dt.now().timestamp())
 
 # If folder doesn't exist, then create it.
-MYDIR = ("LSTM")
+MYDIR = ("LSTM_RESULTS")
 CHECK_FOLDER = os.path.isdir(MYDIR)
 if not CHECK_FOLDER:
     os.makedirs(MYDIR)
 
 # use data prepared by crawler and converter codes.
-dataset = pd.read_csv("./all_data.csv",  names=['date', 'consumption', 'lep'], header=None, skiprows=1)
+dataset = pd.read_csv(
+    "./all_data.csv",
+    names=['date', 'consumption', 'lep'],
+    header=None,
+    skiprows=1
+)
 dataset.head()
 
 # convert string data to float
 dataset['consumption'] = dataset['consumption'].astype('float64')
 dataset['lep'] = dataset['lep'].astype('float64')
 print(dataset.info())
-
-# dataset['date'] = pd.to_datetime(dataset['date'])
 
 first_date = dt.strptime(dataset.iloc[0]['date'], '%Y-%m-%d %H:%M:%S+03:00').strftime('%d.%m.%Y')
 end_date = dt.strptime(dataset.iloc[-25]['date'], '%Y-%m-%d %H:%M:%S+03:00').strftime('%d.%m.%Y')
@@ -237,9 +240,6 @@ epochs = range(len(loss))
 
 y_predicted = model.predict(X_test)
 
-# End timer
-stop = time()
-
 # convert predicted values into real values
 y_predicted_descaled = sc.inverse_transform(y_predicted)
 y_train_descaled = sc.inverse_transform(y_train)
@@ -260,10 +260,13 @@ main_plot = plotter(
 )
 
 # Save graph into folder
-main_plot.figure.savefig(f"./LSTM/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.png")
+main_plot.figure.savefig(f"./LSTM_RESULTS/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.png")
 
 r2_real = r2_score(dataset['consumption'].iloc[-24:], dataset['lep'].iloc[-24:])
 r2_lstm = r2_score(dataset['consumption'].iloc[-24:], y_predicted_descaled[-24:])
+
+# End timer
+stop = time()
 
 headers=['Expected(MWh)', 'Predicted LSTM(MWh)', 'Predicted EPİAŞ(MWh)', 'Error LSTM(%)', 'Error EPİAŞ(%)']
 tabulate_txt = prepare_tabulate(
@@ -278,7 +281,7 @@ tabulate_txt = prepare_tabulate(
 
 with open(f"./LSTM/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.txt", 'w') as f:
     print(tabulate(tabulate_txt, headers=headers), file=f)
-    
+
 
 #   ___ _____   _    _   _   _  _______   ___   _ _  __
 #  / _ \__  /  / \  | \ | | | |/ / _ \ \ / / | | | |/ /
