@@ -50,6 +50,10 @@ def prepare_tabulate(real_cons, real_pred_list, new_pred_cons, total_time, r2_re
     tabulate_txt.append(['End Date', end_date, '', '', ''])
     tabulate_txt.append(['Predicting', predicted_date, '', '', ''])
     tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
+    tabulate_txt.append(['Epoch Count', N_EPOCHS, '', '', ''])
+    tabulate_txt.append(['Batch Size', BATCH_SIZE, '', '', ''])
+    tabulate_txt.append(['Timestamp', TIMESTAMP, '', '', ''])
+    tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
 
     return tabulate_txt
 
@@ -297,8 +301,9 @@ tabulate_txt = prepare_tabulate(
     )
 
 with open(f"./{LSTM_FOLDER}/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.txt", 'w') as f:
-    print(tabulate(tabulate_txt, headers=headers))
-    print(tabulate(tabulate_txt, headers=headers), file=f)
+    tabulated_results = tabulate(tabulate_txt, headers=headers)
+    print(tabulated_results)
+    print(tabulated_results, file=f)
 
 
 #   ___ _____   _    _   _   _  _______   ___   _ _  __
