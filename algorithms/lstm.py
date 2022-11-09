@@ -5,140 +5,32 @@
 from scipy.ndimage import gaussian_filter1d
 from scipy.signal import medfilt
 from numpy.random import seed
-from numpy import array, round as np_round
+from numpy import round as np_round
 from tensorflow import random 
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import r2_score
 from datetime import datetime as dt
-from datetime import timedelta
-import matplotlib.pyplot as plt
 import pandas as pd
 from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential
 from tabulate import tabulate   # improves printing tables on console
-from statistics import mean
 from time import time
 import os
-
-
-def prepare_tabulate(real_cons, real_pred_list, new_pred_cons, total_time, r2_real, r2_lstm, headers):
-    tabulate_txt = []
-    real_errors = []
-    lstm_errors = []
-    real_cons = real_cons.to_list()
-    real_pred_list = real_pred_list.to_list()
-
-    for i in range(24):
-        new_pred = np_round(new_pred_cons[i][0], 2)
-        real_pred = round(real_pred_list[i], 2)
-        expected = round(real_cons[i], 2)
-
-        # Calculate real and expected error
-        error_lstm = round((abs(new_pred - expected) / expected) * 100.0, 2)   
-        error_real = round((abs(real_pred - expected) / expected) * 100.0, 2)   
-        tabulate_txt.append([expected, round(new_pred, 2), real_pred, error_lstm, error_real])
-        lstm_errors.append(error_lstm)
-        real_errors.append(error_real)
-
-    # Prepare data for tabulate and txt file
-    tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
-    tabulate_txt.append(['Average Errors','','', round(mean(lstm_errors), 3), round(mean(real_errors),3)])
-    tabulate_txt.append(['R^2','','', "%.3f" % r2_lstm, "%.3f" % r2_real])
-    tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
-    tabulate_txt.append(['Time in sec.', f"{total_time}", ""])
-    tabulate_txt.append(['Start Date', first_date, '', '', ''])
-    tabulate_txt.append(['End Date', end_date, '', '', ''])
-    tabulate_txt.append(['Predicting', predicted_date, '', '', ''])
-    tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
-    tabulate_txt.append(['Epoch Count', N_EPOCHS, '', '', ''])
-    tabulate_txt.append(['Batch Size', BATCH_SIZE, '', '', ''])
-    tabulate_txt.append(['Timestamp', TIMESTAMP, '', '', ''])
-    tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
-
-    return tabulate_txt
-
-# Plot graph with given data
-def plotter(
-    list_24_hours, 
-    real_24_data,
-    real_24_predicted_data,
-    label_real, 
-    predicted_24_data,
-    label_predict, 
-    xlabel, 
-    ylabel, 
-    title,
-    label_real_predict
-    ):
-
-    main_plot = plt.figure(1, figsize=(30, 30))
-    plt.rcParams['font.size'] = '25'
-
-    # Real data
-    plt.plot(
-        list_24_hours,
-        real_24_data,
-        color='black',
-        linewidth=3,
-        label=label_real
-    )
-
-    # Prediction
-    plt.plot(
-        list_24_hours,
-        predicted_24_data,
-        color='red',
-        linewidth=3,
-        label=label_predict
-    )
-
-    # Real Predicted Data
-    plt.plot(
-        list_24_hours,
-        real_24_predicted_data,
-        color='green',
-        linewidth=3,
-        label=label_real_predict,
-    )
-
-    plt.gcf().autofmt_xdate()
-    plt.xticks(list_24_hours)
-    plt.legend(frameon=True)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.grid()
-    plt.show()
-
-    return main_plot
-
-
-def data_split(sequence, TIMESTAMP):
-    X = []
-    y = []
-    for i in range(len(sequence)):
-        end_ix = i + TIMESTAMP
-        if end_ix > len(sequence)-1:
-            break
-        # i to end_ix as input
-        # end_ix as target output
-        seq_x, seq_y = sequence[i:end_ix], sequence[end_ix]
-        X.append(seq_x)
-        y.append(seq_y)
-    return array(X), array(y)
+from helpers import plotter, prepare_tabulate, data_split
 
 # To give filenames, I use timestamp
 _timestamp = int(dt.now().timestamp())
 
 # If folder doesn't exist, then create it.
-LSTM_FOLDER = ("LSTM_RESULTS")
+LSTM_FOLDER = (os.getcwd() + "/LSTM_RESULTS")
+CSV_FOLDER = os.getcwd() + "/all_data.csv"
 CHECK_FOLDER = os.path.isdir(LSTM_FOLDER)
 if not CHECK_FOLDER:
     os.makedirs(LSTM_FOLDER)
 
 # Use the data prepared by crawler and converter codes.
 dataset = pd.read_csv(
-    "./all_data.csv",
+    CSV_FOLDER,
     names=['date', 'consumption', 'lep'],
     header=None,
     skiprows=1
@@ -184,7 +76,7 @@ train_days = int(len(dataset)*0.8)
 testing_days = len(dataset) - train_days
 
 # Epoch -> one iteration over the entire dataset
-N_EPOCHS = 30
+N_EPOCHS = 1
 
 # Batch_size -> divide dataset and pass into neural network.
 BATCH_SIZE = 24
@@ -274,7 +166,7 @@ main_plot = plotter(
 )
 
 # Save graph into folder
-main_plot.figure.savefig(f"./LSTM_RESULTS/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.png")
+main_plot.figure.savefig(f"{LSTM_FOLDER}/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.png")
 
 r2_real = r2_score(dataset['consumption'].iloc[-24:], dataset['lep'].iloc[-24:])
 r2_lstm = r2_score(dataset['consumption'].iloc[-24:], y_predicted_descaled[-24:])
@@ -291,16 +183,22 @@ headers=[
 ]
 
 tabulate_txt = prepare_tabulate(
+    first_date=first_date,
+    end_date=end_date,
+    predicted_date=predicted_date,
     real_cons=dataset['consumption'].iloc[-24:],
     real_pred_list=dataset['lep'].iloc[-24:],
     new_pred_cons=np_round(y_predicted_descaled[-24:], 2),
     total_time=round(stop-start, 3),
     r2_real=r2_real,
     r2_lstm=r2_lstm,
-    headers=headers
+    headers=headers,
+    N_EPOCHS=N_EPOCHS,
+    BATCH_SIZE=BATCH_SIZE,
+    TIMESTAMP=TIMESTAMP
     )
 
-with open(f"./{LSTM_FOLDER}/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.txt", 'w') as f:
+with open(f"{LSTM_FOLDER}/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.txt", 'w') as f:
     tabulated_results = tabulate(tabulate_txt, headers=headers)
     print(tabulated_results)
     print(tabulated_results, file=f)
