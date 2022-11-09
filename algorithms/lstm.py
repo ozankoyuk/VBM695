@@ -22,13 +22,13 @@ from helpers import *
 _timestamp = int(dt.now().timestamp())
 
 # If folder doesn't exist, then create it.
-if not CHECK_FOLDER:
+if not LSTM_FOLDER_CHECK:
     os.makedirs(LSTM_FOLDER)
 
 # Use the data prepared by crawler and converter codes.
 dataset = pd.read_csv(
     CSV_FOLDER,
-    names=['date', 'consumption', 'lep'],
+    names=HEADERS,
     header=None,
     skiprows=1
 )

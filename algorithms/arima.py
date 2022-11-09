@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import os
 from sklearn.metrics import r2_score
 from helpers import *
+from datetime import datetime as dt
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -64,18 +65,19 @@ def plotter(
 def predict_and_write_files(*, history, model, order, only_24_hours):
     start = time.time()
     # Generate prediction
+    print('Generate model with given order..')
     daily_prediction, result_txt, all_errors = generate_model(
         _data=history, 
         _model=model,
         _order=order,
-        _last_24_data=last_24_data
+        _last_24_data=real_consumption
         )
     end = time.time()
 
     # Use plotter to plot graph
     main_plot = plotter(
         list_24_hours=only_24_hours,  # 24 hours ["00:00", "01:00", ...]
-        real_24_data=last_24_data['Tuketim'],   # real consumption
+        real_24_data=real_consumption['consumption'],   # real consumption
         label_real='Real Time Consumption',     # set pred line name
         predicted_24_data=daily_prediction,     # set pred line values
         label_predict='Predicted Consumption',  # set cons line name
@@ -85,8 +87,9 @@ def predict_and_write_files(*, history, model, order, only_24_hours):
         )
 
     # Save graph into folder
-    main_plot.figure.savefig(f"./ARIMA/{model.__name__}_{order}_{predicted_date}_{_timestamp}.png")
-    r2 = r2_score(last_24_data['Tuketim'], daily_prediction)
+    print('Saving figure..')
+    main_plot.figure.savefig(f"{ARIMA_FOLDER}/{model.__name__}_{order}_{predicted_date}_{_timestamp}.png")
+    r2 = r2_score(real_consumption['consumption'], daily_prediction)
 
     # Prepare data for tabulate and txt file
     result_txt.append(["-"*12, "-"*12, "-"*12])
@@ -102,9 +105,9 @@ def predict_and_write_files(*, history, model, order, only_24_hours):
 
     with open(f"./ARIMA/ARIMA_{order}_{predicted_date}_{_timestamp}.txt", 'w') as f:
         print(tabulate(result_txt, headers=['Predicted(MWh)', 'Expected(MWh)', 'Error (%)']), file=f)
-    
-    return order, mean(all_errors)
 
+    print('Completed ARIMA..')
+    return order, mean(all_errors)
 
 def generate_model(*, _data, _model, _order, _last_24_data):
     _daily_prediction = []
@@ -120,7 +123,7 @@ def generate_model(*, _data, _model, _order, _last_24_data):
 
         # Append list to use it later
         _daily_prediction.append(yhat)
-        expected = _last_24_data['Tuketim'].iloc[t]
+        expected = _last_24_data['consumption'].iloc[t]
         _data.append(expected)
 
         # Calculate real and expected error
@@ -137,33 +140,26 @@ def generate_model(*, _data, _model, _order, _last_24_data):
 # To give filenames, I use timestamp
 _timestamp = int(datetime.now().timestamp())
 
-# Set data size
-USE_ONLY_ONE_YEAR = True
-
 # If folder doesn't exist, then create it.
-MYDIR = (os.getcwd() + "/ARIMA")
-CHECK_FOLDER = os.path.isdir(MYDIR)
-if not CHECK_FOLDER:
-    os.makedirs(MYDIR)
+if not ARIMA_FOLDER_CHECK:
+    os.makedirs(ARIMA_FOLDER)
 
 # Import Google Trends Data
-df = pd.read_csv("./01012016-19102021.csv",  names=['Tarih', 'Saat', 'Tuketim'])
+df = pd.read_csv(
+    CSV_FOLDER,
+    names=HEADERS,
+    header=None,
+    skiprows=1
+)
 df.head()
-# Convert str "37.430,65" -> float "37430.65" 
-df['Tuketim'] = df['Tuketim'].str.replace('.','').astype(str)
-df['Tuketim'] = df['Tuketim'].str.replace(',','.').astype(float)
 
-# Merge 'Tarih' and 'Saat' to create a datetime object
-# and remove 'Saat' column
-# "01.01.2016","01:00" -> "01.01.2016 01:00"
-df['Tarih'] = df['Tarih'] +" "+ df['Saat']
-df['Tarih'] = pd.to_datetime(df['Tarih'])
-df = df.drop(columns='Saat')
-
-last_24_data = df.iloc[-24:] # remove last 24 hours to predict them
+first_date = dt.strptime(df.iloc[0]['date'], '%Y-%m-%d %H:%M:%S+03:00').strftime('%d.%m.%Y')
+end_date = dt.strptime(df.iloc[-25]['date'], '%Y-%m-%d %H:%M:%S+03:00').strftime('%d.%m.%Y')
 next_24_hours = [
-    pd.to_datetime(last_24_data['Tarih'].iloc[0] + timedelta(hours=x),format='%Y%m%d%H%M') for x in range(0,24,1)
+    dt.strptime(x, '%Y-%m-%d %H:%M:%S+03:00') 
+    for x in df.iloc[-24:]['date'].to_list()
 ]
+real_consumption = df.iloc[-24:]
 
 # Set X-axis data
 only_24_hours = [hrs.strftime('%H:%M') for hrs in next_24_hours]
@@ -172,14 +168,15 @@ only_24_hours = [hrs.strftime('%H:%M') for hrs in next_24_hours]
 predicted_date = datetime.strftime(next_24_hours[0], '%d.%m.%Y')
 
 if USE_ONLY_ONE_YEAR:
-    data = df['Tuketim'].iloc[-365*24:]
+    data = df['consumption'].iloc[-365*24:]
     # 365 * 24 hours = 1 year
 else:
-    data = df['Tuketim']
+    data = df['consumption']
 
 history = [hourly_consumption for hourly_consumption in data]
 model = ARIMA
-_order, _mean = predict_and_write_files(history=history, model=model, order=(10, 1, 1), only_24_hours=only_24_hours)
+print("Predicting..")
+_order, _mean = predict_and_write_files(history=history, model=model, order=(1, 1, 1), only_24_hours=only_24_hours)
 
 #####################################################
 #   After this line, calculating and comparing      #
