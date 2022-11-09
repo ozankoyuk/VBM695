@@ -1,9 +1,21 @@
 from numpy import array, round as np_round
 import matplotlib.pyplot as plt
 from statistics import mean
+import os
 
 
-# def prepare_tabulate(real_cons, real_pred_list, new_pred_cons, total_time, r2_real, r2_lstm, headers):
+# ARIMA
+
+
+# LSTM
+LSTM_FOLDER = (os.getcwd() + "/LSTM_RESULTS")
+CSV_FOLDER = os.getcwd() + "/all_data.csv"
+CHECK_FOLDER = os.path.isdir(LSTM_FOLDER)
+N_EPOCHS = 30  # Epoch -> one iteration over the entire dataset
+BATCH_SIZE = 24  # Batch_size -> divide dataset and pass into neural network.
+TIMESTAMP = 24  # Parse and divide data into size of 24 hour of data.
+
+
 def prepare_tabulate(**kwargs):
     tabulate_txt = []
     real_errors = []

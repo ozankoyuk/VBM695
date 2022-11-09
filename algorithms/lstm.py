@@ -16,15 +16,12 @@ from keras.models import Sequential
 from tabulate import tabulate   # improves printing tables on console
 from time import time
 import os
-from helpers import plotter, prepare_tabulate, data_split
+from helpers import *
 
 # To give filenames, I use timestamp
 _timestamp = int(dt.now().timestamp())
 
 # If folder doesn't exist, then create it.
-LSTM_FOLDER = (os.getcwd() + "/LSTM_RESULTS")
-CSV_FOLDER = os.getcwd() + "/all_data.csv"
-CHECK_FOLDER = os.path.isdir(LSTM_FOLDER)
 if not CHECK_FOLDER:
     os.makedirs(LSTM_FOLDER)
 
@@ -74,15 +71,6 @@ train_days = int(len(dataset)*0.8)
 
 # Number of days to be predicted. %20 of the data will be used to test.
 testing_days = len(dataset) - train_days
-
-# Epoch -> one iteration over the entire dataset
-N_EPOCHS = 1
-
-# Batch_size -> divide dataset and pass into neural network.
-BATCH_SIZE = 24
-
-# Parse and divide data into size of 24 hour of data.
-TIMESTAMP = 24
 
 train_set = dataset[0:train_days].reset_index(drop=True)
 test_set = dataset[train_days: train_days+testing_days].reset_index(drop=True)
