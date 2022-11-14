@@ -176,7 +176,7 @@ else:
 history = [hourly_consumption for hourly_consumption in data]
 model = ARIMA
 print("Predicting..")
-_order, _mean = predict_and_write_files(history=history, model=model, order=(1, 1, 1), only_24_hours=only_24_hours)
+_order, _mean = predict_and_write_files(history=history, model=model, order=(6, 0, 2), only_24_hours=only_24_hours)
 
 #####################################################
 #   After this line, calculating and comparing      #
@@ -186,9 +186,10 @@ _order, _mean = predict_and_write_files(history=history, model=model, order=(1, 
 #   This process takes about 7 hours due to         #
 #   data size.                                      #
 #---------------------------------------------------#
-#   I've already found the best model with          #
-#   this code and it is (10,1,1) which is used      #
-#   to write the report.                            #
+#   Here are the best orders:                       #
+#   (6 , 0, 2)                                      #
+#   (8 , 0, 0)                                      #
+#   (10, 0 ,2)                                      #
 #####################################################
 
 # p_values = [0, 1, 2, 4, 6, 8, 10]
@@ -197,7 +198,7 @@ _order, _mean = predict_and_write_files(history=history, model=model, order=(1, 
 # """
 # p is the number of autoregressive terms,
 # d is the number of nonseasonal differences needed for stationarity, and
-# q is the number of lagged forecast errors in the prediction equation. 
+# q is the number of lagged forecast errors in the prediction equation.
 # """
 # best_order = ""
 # best_error_mean = 100
@@ -206,7 +207,7 @@ _order, _mean = predict_and_write_files(history=history, model=model, order=(1, 
 #         for q in q_values:
 #             order = (p, d, q)
 #             print(f"Starting new order: {order}")
-#             _order, _mean = predict_and_write_files(history=history, model=model, order=order)
+#             _order, _mean = predict_and_write_files(history=history, model=model, order=order, only_24_hours=only_24_hours)
 #             if _mean < best_error_mean:
 #                 best_error_mean = _mean
 #                 best_order = _order
@@ -214,11 +215,11 @@ _order, _mean = predict_and_write_files(history=history, model=model, order=(1, 
 
 #   ___ _____   _    _   _   _  _______   ___   _ _  __
 #  / _ \__  /  / \  | \ | | | |/ / _ \ \ / / | | | |/ /
-# | | | |/ /  / _ \ |  \| | | ' / | | \ V /| | | | ' / 
-# | |_| / /_ / ___ \| |\  | | . \ |_| || | | |_| | . \ 
+# | | | |/ /  / _ \ |  \| | | ' / | | \ V /| | | | ' /
+# | |_| / /_ / ___ \| |\  | | . \ |_| || | | |_| | . \
 #  \___/____/_/   \_\_| \_| |_|\_\___/ |_|  \___/|_|\_\
-#  _   _ ____   ___ ____  _____  ___ _______________ 
+#  _   _ ____   ___ ____  _____  ___ _______________
 # | \ | |___ \ / _ \___ \|___ / / _ \___ /___ /___  |
-# |  \| | __) | | | |__) | |_ \| | | ||_ \ |_ \  / / 
-# | |\  |/ __/| |_| / __/ ___) | |_| |__) |__) |/ /  
+# |  \| | __) | | | |__) | |_ \| | | ||_ \ |_ \  / /
+# | |\  |/ __/| |_| / __/ ___) | |_| |__) |__) |/ /
 # |_| \_|_____|\___/_____|____/ \___/____/____//_/   
