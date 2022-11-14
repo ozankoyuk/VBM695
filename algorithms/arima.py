@@ -18,50 +18,6 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-# Plot graph with given data
-def plotter(
-    list_24_hours, 
-    real_24_data, 
-    label_real, 
-    predicted_24_data, 
-    label_predict, 
-    xlabel, 
-    ylabel, 
-    title
-    ):
-
-    main_plot = plt.figure(1, figsize=(30, 30))
-    plt.rcParams['font.size'] = '25'
-
-    # Real data
-    plt.plot(
-        list_24_hours,
-        real_24_data,
-        color='black',
-        linewidth=2,
-        label=label_real
-    )
-
-    # Prediction
-    plt.plot(
-        list_24_hours,
-        predicted_24_data,
-        color='red',
-        linewidth=2,
-        label=label_predict
-    )
-
-    plt.gcf().autofmt_xdate()
-    plt.xticks(list_24_hours)
-    plt.legend(frameon=True)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.grid()
-    plt.show()
-
-    return main_plot
-
 def predict_and_write_files(*, history, model, order, only_24_hours):
     start = time.time()
     # Generate prediction
@@ -78,12 +34,14 @@ def predict_and_write_files(*, history, model, order, only_24_hours):
     main_plot = plotter(
         list_24_hours=only_24_hours,  # 24 hours ["00:00", "01:00", ...]
         real_24_data=real_consumption['consumption'],   # real consumption
+        real_24_predicted_data=real_consumption['lep'],   # real consumption
         label_real='Real Time Consumption',     # set pred line name
         predicted_24_data=daily_prediction,     # set pred line values
-        label_predict='Predicted Consumption',  # set cons line name
+        label_predict='ARIMA Prediction',  # set cons line name
         xlabel="Time",                          # set x axis
         ylabel="Consumption (MWh)",             # set y axis
-        title=f"Comparison of Predicted-Real Time Electricity Consumption for the date :{predicted_date} with ARIMA"
+        title=f"Comparison of Predicted-Real Time Electricity Consumption for the date :{predicted_date} with ARIMA",
+        label_real_predict='EPİAŞ Prediction'
         )
 
     # Save graph into folder
@@ -93,7 +51,7 @@ def predict_and_write_files(*, history, model, order, only_24_hours):
 
     # Prepare data for tabulate and txt file
     result_txt.append(["-"*12, "-"*12, "-"*12])
-    result_txt.append(['Model',f"ARIMA", f"{order}"])
+    result_txt.append(['Model', f"ARIMA", f"{order}"])
     result_txt.append(['Data Size', f"{len(history)}", ""])
     result_txt.append(['Average Error', round(mean(all_errors), 3), ""])
     result_txt.append(['Time in sec.', "%.3f" % round(end-start, 2), ""])
@@ -103,11 +61,12 @@ def predict_and_write_files(*, history, model, order, only_24_hours):
         tabulate(result_txt, headers=['Predicted(MWh)', 'Expected(MWh)', 'Error (%)'])
         )
 
-    with open(f"./ARIMA/ARIMA_{order}_{predicted_date}_{_timestamp}.txt", 'w') as f:
+    with open(f"{ARIMA_FOLDER}/ARIMA_{order}_{predicted_date}_{_timestamp}.txt", 'w') as f:
         print(tabulate(result_txt, headers=['Predicted(MWh)', 'Expected(MWh)', 'Error (%)']), file=f)
 
     print('Completed ARIMA..')
     return order, mean(all_errors)
+
 
 def generate_model(*, _data, _model, _order, _last_24_data):
     _daily_prediction = []
@@ -176,7 +135,7 @@ else:
 history = [hourly_consumption for hourly_consumption in data]
 model = ARIMA
 print("Predicting..")
-_order, _mean = predict_and_write_files(history=history, model=model, order=(6, 0, 2), only_24_hours=only_24_hours)
+_order, _mean = predict_and_write_files(history=history, model=model, order=(1, 1, 1), only_24_hours=only_24_hours)
 
 #####################################################
 #   After this line, calculating and comparing      #
@@ -222,4 +181,4 @@ _order, _mean = predict_and_write_files(history=history, model=model, order=(6, 
 # | \ | |___ \ / _ \___ \|___ / / _ \___ /___ /___  |
 # |  \| | __) | | | |__) | |_ \| | | ||_ \ |_ \  / /
 # | |\  |/ __/| |_| / __/ ___) | |_| |__) |__) |/ /
-# |_| \_|_____|\___/_____|____/ \___/____/____//_/   
+# |_| \_|_____|\___/_____|____/ \___/____/____//_/

@@ -141,7 +141,7 @@ y_pred = y_predicted.ravel()
 y_pred = [round(yx, 2) for yx in y_pred]
 
 main_plot = plotter(
-    list_24_hours = _24_hours,
+    list_24_hours=_24_hours,
     real_24_data=dataset['consumption'].iloc[-24:],
     real_24_predicted_data=dataset['lep'].iloc[-24:],
     label_real='Real Time Consumption',

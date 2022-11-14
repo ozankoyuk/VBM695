@@ -43,8 +43,8 @@ def prepare_tabulate(**kwargs):
 
     # Prepare data for tabulate and txt file
     tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
-    tabulate_txt.append(['Average Errors','','', round(mean(lstm_errors), 3), round(mean(real_errors),3)])
-    tabulate_txt.append(['R^2','','', "%.3f" % kwargs["r2_lstm"], "%.3f" % kwargs["r2_real"]])
+    tabulate_txt.append(['Average Errors', '', '', round(mean(lstm_errors), 3), round(mean(real_errors),3)])
+    tabulate_txt.append(['R^2', '', '', "%.3f" % kwargs["r2_lstm"], "%.3f" % kwargs["r2_real"]])
     tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
     tabulate_txt.append(['Time in sec.', kwargs["total_time"], ""])
     tabulate_txt.append(['Start Date', kwargs["first_date"], '', '', ''])
