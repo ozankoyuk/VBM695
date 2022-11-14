@@ -11,7 +11,7 @@ HEADERS = pd.read_csv(CSV_FOLDER).columns.to_list()
 
 # ARIMA
 USE_ONLY_ONE_YEAR = True
-ARIMA_FOLDER = (os.getcwd() + "/ARIMA")
+ARIMA_FOLDER = (os.getcwd() + "/ARIMA_RESULTS")
 ARIMA_FOLDER_CHECK = os.path.isdir(ARIMA_FOLDER)
 
 # LSTM
