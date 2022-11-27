@@ -30,7 +30,10 @@ def prepare_tabulate(**kwargs):
     real_pred_list = kwargs["real_pred_list"].to_list()
 
     for i in range(24):
-        new_pred = np_round(kwargs["new_pred_cons"][i][0], 2)
+        if kwargs['model_name'] == 'ARIMA':
+            new_pred = kwargs["new_pred_cons"][i]
+        if kwargs['model_name'] == 'LSTM':
+            new_pred = np_round(kwargs["new_pred_cons"][i][0], 2)
         real_pred = round(real_pred_list[i], 2)
         expected = round(real_cons[i], 2)
 
@@ -44,17 +47,23 @@ def prepare_tabulate(**kwargs):
     # Prepare data for tabulate and txt file
     tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
     tabulate_txt.append(['Average Errors', '', '', round(mean(lstm_errors), 3), round(mean(real_errors),3)])
-    tabulate_txt.append(['R^2', '', '', "%.3f" % kwargs["r2_lstm"], "%.3f" % kwargs["r2_real"]])
+    tabulate_txt.append(['R^2', '', '', "%.3f" % kwargs["r2_score"], "%.3f" % kwargs["r2_real"]])
     tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
     tabulate_txt.append(['Time in sec.', kwargs["total_time"], ""])
     tabulate_txt.append(['Start Date', kwargs["first_date"], '', '', ''])
     tabulate_txt.append(['End Date', kwargs["end_date"], '', '', ''])
     tabulate_txt.append(['Predicting', kwargs["predicted_date"], '', '', ''])
     tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
-    tabulate_txt.append(['Epoch Count', kwargs["N_EPOCHS"], '', '', ''])
-    tabulate_txt.append(['Batch Size', kwargs["BATCH_SIZE"], '', '', ''])
-    tabulate_txt.append(['Timestamp', kwargs["TIMESTAMP"], '', '', ''])
-    tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
+
+    if kwargs['model_name'] == 'ARIMA':
+        tabulate_txt.append(['ARIMA Order', kwargs["order"], '', '', ''])
+        tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
+
+    if kwargs['model_name'] == 'LSTM':
+        tabulate_txt.append(['Epoch Count', kwargs["N_EPOCHS"], '', '', ''])
+        tabulate_txt.append(['Batch Size', kwargs["BATCH_SIZE"], '', '', ''])
+        tabulate_txt.append(['Timestamp', kwargs["TIMESTAMP"], '', '', ''])
+        tabulate_txt.append(["-"*12, "-"*12, "-"*12, "-"*12, "-"*12])
 
     return tabulate_txt
 
