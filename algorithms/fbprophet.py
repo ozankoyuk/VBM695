@@ -86,6 +86,7 @@ def run_prophet():
     only_24_hours = [hrs.strftime('%H:%M') for hrs in next_24_hours['ds']]
 
     # Use plotter to plot graph
+    # TODO: fix multiple line problem
     main_plot = plotter(
             list_24_hours=_24_hours,
             real_24_data=df['consumption'].iloc[-24:],
