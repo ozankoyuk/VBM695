@@ -6,7 +6,7 @@ from scipy.ndimage import gaussian_filter1d
 from scipy.signal import medfilt
 from numpy.random import seed
 from numpy import round as np_round
-from tensorflow import random 
+from tensorflow import random
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import r2_score
 from datetime import datetime as dt
@@ -39,6 +39,7 @@ dataset['consumption'] = dataset['consumption'].astype('float64')
 dataset['lep'] = dataset['lep'].astype('float64')
 print(dataset.info())
 
+# find start and end date, prepare next 24 hours
 first_date = dt.strptime(dataset.iloc[0]['date'], '%Y-%m-%d %H:%M:%S+03:00').strftime('%d.%m.%Y')
 end_date = dt.strptime(dataset.iloc[-25]['date'], '%Y-%m-%d %H:%M:%S+03:00').strftime('%d.%m.%Y')
 next_24_hours = [
@@ -66,6 +67,7 @@ predicted_date = dt.strftime(next_24_hours[0], '%d.%m.%Y')
 
 seed(1)
 random.set_seed(1)
+
 # Number of days to train from. %80 of the data will be used to train.
 train_days = int(len(dataset)*0.8)
 
@@ -97,7 +99,7 @@ X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
 model = Sequential()
 model.add(
     LSTM(
-        24,
+        24,  # 24 hidden layers added
         activation='relu',
         return_sequences=True,
         input_shape=(X_train.shape[1], 1)
@@ -105,10 +107,11 @@ model.add(
     )
 # Dropout: blocks random data for the given probability to next iteration.
 model.add(Dropout(0.2))
-model.add(LSTM(24, return_sequences=True))
+model.add(LSTM(24, return_sequences=True))  # again 24 hidden layers added
 model.add(Dropout(0.2))
 
-# Final iteration needs no return_sequences because its the final step.
+# Final iteration needs no return_sequences because it is the final step.
+# Final output is 24 due to 24 hours prediction
 model.add(LSTM(24))
 
 # When return_sequences is set to False,
@@ -162,7 +165,7 @@ r2_lstm = r2_score(dataset['consumption'].iloc[-24:], y_predicted_descaled[-24:]
 # End timer
 stop = time()
 
-headers=[
+headers = [
     'Expected(MWh)', 
     'Predicted LSTM(MWh)', 
     'Predicted EPİAŞ(MWh)', 
