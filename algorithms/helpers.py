@@ -21,6 +21,10 @@ N_EPOCHS = 1  # Epoch -> one iteration over the entire dataset
 BATCH_SIZE = 24  # Batch_size -> divide dataset and pass into neural network.
 TIMESTAMP = 24  # Parse and divide data into size of 24 hour of data.
 
+# PROPHET
+PROPHET_FOLDER = (os.getcwd() + "/PROPHET_RESULTS")
+PROPHET_FOLDER_CHECK = os.path.isdir(PROPHET_FOLDER)
+
 
 def prepare_tabulate(**kwargs):
     tabulate_txt = []
@@ -31,9 +35,12 @@ def prepare_tabulate(**kwargs):
 
     for i in range(24):
         if kwargs['model_name'] == 'ARIMA':
-            new_pred = kwargs["new_pred_cons"][i]
+            new_pred = round(kwargs["new_pred_cons"][i], 2)
         if kwargs['model_name'] == 'LSTM':
             new_pred = np_round(kwargs["new_pred_cons"][i][0], 2)
+        if kwargs['model_name'] == 'PROPHET':
+            new_pred = np_round(kwargs["new_pred_cons"][i], 2)
+
         real_pred = round(real_pred_list[i], 2)
         expected = round(real_cons[i], 2)
 

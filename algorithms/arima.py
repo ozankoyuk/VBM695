@@ -3,12 +3,9 @@
 # VBM 695 Bitirme Projesi
 # 11.2022
 import pandas as pd
-from datetime import timedelta, datetime
+from datetime import datetime
 from statsmodels.tsa.arima.model import ARIMA
 from tabulate import tabulate   # improves printing tables on console
-from statistics import mean
-import matplotlib.pyplot as plt
-import os
 from sklearn.metrics import r2_score
 from .helpers import *
 from datetime import datetime as dt
