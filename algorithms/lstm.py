@@ -67,6 +67,7 @@ def run_lstm():
         skiprows=1
     )
     dataset.head()
+    real_consumption = dataset.iloc[-24:]
 
     # convert string data to float
     dataset['consumption'] = dataset['consumption'].astype('float64')
@@ -169,7 +170,7 @@ def run_lstm():
     # Save graph into folder
     main_plot.figure.savefig(f"{LSTM_FOLDER}/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.png")
 
-    r2_real = r2_score(dataset['consumption'].iloc[-24:], dataset['lep'].iloc[-24:])
+    r2_real = r2_score(real_consumption['consumption'], real_consumption['lep'])
     r2_lstm = r2_score(dataset['consumption'].iloc[-24:], y_predicted_descaled[-24:])
 
     # End timer
@@ -187,8 +188,8 @@ def run_lstm():
         first_date=first_date,
         end_date=end_date,
         predicted_date=predicted_date,
-        real_cons=dataset['consumption'].iloc[-24:],
-        real_pred_list=dataset['lep'].iloc[-24:],
+        real_cons=real_consumption['consumption'],
+        real_pred_list=real_consumption['lep'],
         new_pred_cons=np_round(y_predicted_descaled[-24:], 2),
         total_time=round(stop-start, 3),
         r2_real=r2_real,
@@ -202,10 +203,12 @@ def run_lstm():
 
     with open(f"{LSTM_FOLDER}/LSTM_{N_EPOCHS}_Epochs_{predicted_date}_{_timestamp}.txt", 'w') as f:
         tabulated_results = tabulate(tabulate_txt, headers=headers)
-        print(tabulated_results)
+        # print(tabulated_results)
         print(tabulated_results, file=f)
     print(f"LSTM calculation completed in total time: {round(stop-start, 3)} seconds")
     print("#"*50)
+
+    return tabulate_txt
 
 
 #   ___ _____   _    _   _   _  _______   ___   _ _  __

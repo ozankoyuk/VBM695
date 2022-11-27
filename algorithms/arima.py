@@ -18,7 +18,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def predict_and_write_files(*, history, model, order, only_24_hours, real_consumption, predicted_date, _timestamp, first_date, end_date):
+def predict_and_write_files(*, history, model, order, only_24_hours, real_consumption, predicted_date, _timestamp, first_date, end_date, r2_real):
     start = time()
     # Generate prediction
     print('Generate model with given order..')
@@ -48,7 +48,6 @@ def predict_and_write_files(*, history, model, order, only_24_hours, real_consum
     print('Saving figure..')
     main_plot.figure.savefig(f"{ARIMA_FOLDER}/{model.__name__}_{order}_{predicted_date}_{_timestamp}.png")
     r2 = r2_score(real_consumption['consumption'], daily_prediction)
-    r2_real = r2_score(real_consumption['consumption'].iloc[-24:], real_consumption['lep'].iloc[-24:])
 
     # Prepare data for tabulate and txt file
     headers = [
@@ -76,11 +75,11 @@ def predict_and_write_files(*, history, model, order, only_24_hours, real_consum
 
     with open(f"{ARIMA_FOLDER}/ARIMA_{order}_{predicted_date}_{_timestamp}.txt", 'w') as f:
         tabulated_results = tabulate(tabulate_result, headers=headers)
-        print(tabulated_results)
+        # print(tabulated_results)
         print(tabulate(tabulated_results, headers=headers), file=f)
 
     print('Completed ARIMA..')
-    return order, mean(all_errors)
+    return order, mean(all_errors), tabulate_result
 
 
 def generate_model(*, _data, _model, _order, _last_24_data):
@@ -146,7 +145,7 @@ def run_arima(FIND_BEST_ORDER=False):
                 for q in q_values:
                     order = (p, d, q)
                     print(f"Starting new order: {order}")
-                    _order, _mean = predict_and_write_files(
+                    _order, _mean, _ = predict_and_write_files(
                         history=history, model=model, order=order, only_24_hours=only_24_hours,
                     )
                     if _mean < best_error_mean:
@@ -181,6 +180,7 @@ def run_arima(FIND_BEST_ORDER=False):
         for x in df.iloc[-24:]['date'].to_list()
     ]
     real_consumption = df.iloc[-24:]
+    r2_real = r2_score(real_consumption['consumption'].iloc[-24:], real_consumption['lep'].iloc[-24:])
 
     # Set X-axis data
     only_24_hours = [hrs.strftime('%H:%M') for hrs in next_24_hours]
@@ -201,7 +201,7 @@ def run_arima(FIND_BEST_ORDER=False):
         find_best_order()
 
     print("Predicting..")
-    _order, _mean = predict_and_write_files(
+    _order, _mean, tabulate_result = predict_and_write_files(
         history=history,
         model=model,
         order=(1, 1, 1),
@@ -211,12 +211,15 @@ def run_arima(FIND_BEST_ORDER=False):
         _timestamp=_timestamp,
         first_date=first_date,
         end_date=end_date,
+        r2_real=r2_real
     )
     # End timer
     stop = time()
 
     print(f"ARIMA calculation completed in total time: {round(stop-start, 3)} seconds")
     print("#"*50)
+
+    return tabulate_result
 
 
 #   ___ _____   _    _   _   _  _______   ___   _ _  __
