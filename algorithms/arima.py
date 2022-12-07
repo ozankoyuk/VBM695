@@ -73,7 +73,7 @@ def predict_and_write_files(*, history, model, order, only_24_hours, real_consum
     with open(f"{ARIMA_FOLDER}/ARIMA_{order}_{predicted_date}_{_timestamp}.txt", 'w') as f:
         tabulated_results = tabulate(tabulate_result, headers=headers)
         # print(tabulated_results)
-        print(tabulate(tabulated_results, headers=headers), file=f)
+        print(tabulated_results, file=f)
 
     print('Completed ARIMA..')
     return order, mean(all_errors), tabulate_result
@@ -201,7 +201,7 @@ def run_arima(FIND_BEST_ORDER=False):
     _order, _mean, tabulate_result = predict_and_write_files(
         history=history,
         model=model,
-        order=(1, 1, 1),
+        order=(6, 0, 2),
         only_24_hours=only_24_hours,
         real_consumption=real_consumption,
         predicted_date=predicted_date,

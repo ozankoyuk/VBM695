@@ -17,7 +17,7 @@ ARIMA_FOLDER_CHECK = os.path.isdir(ARIMA_FOLDER)
 # LSTM
 LSTM_FOLDER = (os.getcwd() + "/LSTM_RESULTS")
 LSTM_FOLDER_CHECK = os.path.isdir(LSTM_FOLDER)
-N_EPOCHS = 1  # Epoch -> one iteration over the entire dataset
+N_EPOCHS = 8  # Epoch -> one iteration over the entire dataset
 BATCH_SIZE = 24  # Batch_size -> divide dataset and pass into neural network.
 TIMESTAMP = 24  # Parse and divide data into size of 24 hour of data.
 
