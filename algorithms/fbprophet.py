@@ -16,12 +16,6 @@ warnings.filterwarnings("ignore")
 
 
 def run_prophet():
-    # Choose to train model with all the existing data
-    # or only one year data
-    #########################
-    USE_ONLY_ONE_YEAR = True
-    #########################
-
     # If folder doesn't exist, then create it.
     if not PROPHET_FOLDER_CHECK:
         os.makedirs(PROPHET_FOLDER)

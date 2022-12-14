@@ -9,8 +9,9 @@ CSV_FOLDER = os.getcwd() + "/all_data.csv"
 HEADERS = pd.read_csv(CSV_FOLDER).columns.to_list()
 # date, consumption, lep
 
-# ARIMA
 USE_ONLY_ONE_YEAR = True
+
+# ARIMA
 ARIMA_FOLDER = (os.getcwd() + "/ARIMA_RESULTS")
 ARIMA_FOLDER_CHECK = os.path.isdir(ARIMA_FOLDER)
 

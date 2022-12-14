@@ -20,7 +20,7 @@ def prepare_lstm_model(X_train):
     # Apply stacked LSTM wih 2 drop-outs
     # activations: 'relu' / 'sigmoid' / 'tanh' / 'hardtanh' / 'leekly'
     # return_sequences: True -> to pass results to the next iteration of LSTM
-    # input_shape: (X_train.shape[1], 1) -> shape is TIMESTAMP value
+    # input_shape: (X_train.shape[1], 1) -> shape is TIMESTAMP (default 24 hours) value
     # total hidden layer count = 24
     model = Sequential()
     model.add(
@@ -33,6 +33,7 @@ def prepare_lstm_model(X_train):
     )
     # Dropout: blocks random data for the given probability to next iteration.
     model.add(Dropout(0.2))
+
     model.add(LSTM(24, return_sequences=True))  # again 24 hidden layers added
     model.add(Dropout(0.2))
 
