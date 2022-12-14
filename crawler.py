@@ -17,6 +17,12 @@ baseURL = 'https://api.epias.com.tr/epias/exchange/transparency'
 consumptionURL = '/consumption/real-time-consumption'
 predictionURL = '/consumption/load-estimation-plan'
 
+# İstenilen aralıkta veriyi indirmek için tarih girilmesi gerekiyor.
+# (YIL, AY, GÜN, SAAT, DAKİKA, SANİYE)
+DEFAULT_START_DATE = datetime.datetime(2018, 1, 1, 0, 0, 0)
+DEFAULT_END_DATE = datetime.datetime(2022, 10, 1, 0, 0, 0)
+
+
 def check_folders():
     if not os.path.isdir('./next_day_pred'):
         os.mkdir(os.getcwd() + '/next_day_pred')
@@ -36,6 +42,7 @@ def download_real_consumption():
             outfile.write(json_object)
         start_date = start_date + relativedelta(months=+1)
 
+
 def download_predictions():
     start_date, end_date, now = reset_dates()
     while now < end_date:
@@ -48,15 +55,18 @@ def download_predictions():
             outfile.write(json_object)
         start_date = start_date + relativedelta(months=+1)
 
+
 def reset_dates():
-    start_date = datetime.datetime(2018,1,1,0,0,0)
-    end_date = datetime.datetime(2022,10,1,0,0,0)
+    start_date = DEFAULT_START_DATE
+    end_date = DEFAULT_END_DATE
     now = start_date
     return (start_date, end_date, now)
+
 
 def crawl_data():
     check_folders()
     download_predictions()
     download_real_consumption()
+
 
 crawl_data()
